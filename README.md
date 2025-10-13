@@ -6,7 +6,7 @@ Localization of the game **Causalties: Unknown** by [Orsoniks](https://github.co
 | :--- | :---------- | :----------------- | :---: |  :------:  |  :-----:  |  :--  |
 | [en]() | 🟢 Complete | 🟢 Complete | **4** | 0 | 0 | *no `credits.json` found* |
 | [fr_FR]() | 🔘 Mismatch | 🟡 Partial *(0/3)* | **0** | **1** | **3** | *invalid `credits.json`* |
-Last updated on 13/10/2025 (2025-10-13 20:31:08.658 UTC)
+Last updated on 13/10/2025 (2025-10-13 20:39:37.290 UTC)
 
 
 **Legend**
