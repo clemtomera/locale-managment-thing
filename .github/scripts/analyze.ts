@@ -131,14 +131,13 @@ const INDEX_TEMPLATE_PATH = ".github/templates/index.template.json";
 
   // ---- Build condensed report (per-locale sections)
   const lines: string[] = [];
-  const today = new Date().toLocaleDateString("en-GB");
-  const timeUTC = new Date().toISOString().replace("T"," ").replace("Z"," UTC");
+  const todayTimeUtc = (new Date()).toLocaleString("en-GB", { timeZone: "UTC", dateStyle: "short", timeStyle: "short", hour12: false }) + " UTC";
 
   lines.push(`# Locale Audit Report`);
-  lines.push(`Last updated on ${today} (${timeUTC})`);
+  lines.push(`Last updated on ${todayTimeUtc}`);
   lines.push("");
 
-  for (const locale of [REF_LOCALE, ...locales]) {
+  for (const locale of locales) {
     const r = results[locale];
     const textOK = r.invalidText === 0 && r.totals.textInRef > 0;
     const mediaOK = r.invalidMedia === 0 && r.totals.mediaInRef > 0;
@@ -146,8 +145,8 @@ const INDEX_TEMPLATE_PATH = ".github/templates/index.template.json";
     const mismatchCount = r.invalidText + r.invalidMedia;
 
     lines.push(`## ${locale}`);
-    lines.push(`- Text: ${hasRefText ? (textOK ? "🟢 Complete" : (r.invalidText > 0 ? "🔘 Mismatch" : `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`)) : "_(no text in reference)_"} `);
-    lines.push(`- Media: ${hasRefMedia ? (mediaOK ? "🟢 Complete" : (r.invalidMedia > 0 ? "🔘 Mismatch" : `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`)) : "_(no media in reference)_"} `);
+    lines.push(`- Text: ${hasRefText ? (textOK ? "🟢 Complete" : (r.invalidText > 0 ? "🔘 Mismatch" : `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`)) : "_(no text in reference)_"} `);
+    lines.push(`- Media: ${hasRefMedia ? (mediaOK ? "🟢 Complete" : (r.invalidMedia > 0 ? "🔘 Mismatch" : `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`)) : "_(no media in reference)_"} `);
     lines.push(`- Ok: **${r.validText + r.validMedia}**  |  Mismatch: **${mismatchCount}**  |  Missing: **${missingCount}**`);
     lines.push("");
 
@@ -176,11 +175,13 @@ const INDEX_TEMPLATE_PATH = ".github/templates/index.template.json";
 
     if (r.missing.length) {
       lines.push(`<details><summary><strong>Missing files</strong> (${r.missing.length})</summary>`);
+      lines.push("");
       for (const f of r.missing.sort()) lines.push(`- \`${f}\``);
       lines.push(`</details>`);
       lines.push("");
     }
     if (r.extra.length) {
+      lines.push("");
       lines.push(`<details><summary><strong>Extra files</strong> (${r.extra.length})</summary>`);
       for (const f of r.extra.sort()) lines.push(`- \`${f}\``);
       lines.push(`</details>`);
@@ -228,22 +229,44 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
   const showTextColumn = refJson.length > 0;
   const showMediaColumn = refMedia.length > 0;
 
+  /**
+   * Tries to find the friendly locale name from strings.json's "name" field and formats it for markdown
+   * @param locale locale code like `en` or `fr-FR`
+   * @returns a string like `[English](Locales/en)` or just `[en](Locales/en)` if not found
+   */
+  function findLocaleName(locale: string): string {
+    const p = path.join(LOCALES_DIR, locale, "strings.json");
+    if (!fs.existsSync(p)) return `[${locale}](Locales/${locale})`;
+    try {
+      const data = JSON.parse(fs.readFileSync(p,"utf8"));
+      if (data && typeof data === "object" && typeof data.name === "string" && data.name.trim().length > 0) {
+        return `[${data.name.trim()}](Locales/${locale})`;
+      }
+    } catch { /* ignore */ }
+    return locale;
+  }
+
   function textStatus(r: FileResult): string {
     if (!showTextColumn) return "";
     if (r.totals.textInRef === 0) return "";
-    if (r.invalidText > 0) return "🔘 Mismatch";
+    if (r.invalidText > 0) return "🔘 Mismatch";
     const ok = r.validText === r.totals.textInRef;
-    return ok ? "🟢 Complete" : `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`;
+    if (ok) return "🟢 Complete";
+    if (r.validText === 0) return "-";
+    return `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`;
   }
+
   function mediaStatus(r: FileResult): string {
     if (!showMediaColumn) return "";
     if (r.totals.mediaInRef === 0) return "";
-    if (r.invalidMedia > 0) return "🔘 Mismatch";
+    if (r.invalidMedia > 0) return "🔘 Mismatch";
     const ok = r.validMedia === r.totals.mediaInRef;
-    return ok ? "🟢 Complete" : `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`;
+    if (ok) return "🟢 Complete";
+    if (r.validMedia === 0) return "-";
+    return `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`;
   }
 
-  // Optional credits: Locales/<locale>/credits.json = ["githubUser","..."] or [{ "name":"", "url":"" }]
+  // credits: Locales/<locale>/credits.json = ["githubUser","..."] or [{ "name":"", "url":"" }]
   function creditsFor(locale: string): string {
     const p = path.join(LOCALES_DIR, locale, "credits.json");
     if (!fs.existsSync(p)) return "*no `credits.json` found*";
@@ -271,23 +294,23 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
   headerCols.push("Ok","Mismatch","Missing","Contributors");
 
   const align = [":---"];
-  if (showTextColumn) align.push(":----------");
-  if (showMediaColumn) align.push(":-----------------");
+  if (showTextColumn) align.push(":----------:");
+  if (showMediaColumn) align.push(":----------:");
   align.push(":---:"," :------: "," :-----: "," :-- ");
 
   const rows: string[] = [];
-  for (const locale of [REF_LOCALE, ...locales]) {
+  for (const locale of locales) {
     const r = results[locale];
     const ok = r.validText + r.validMedia;
     const mm = r.invalidText + r.invalidMedia;
     const miss = r.missing.length;
-    const link = `[]()`; // placeholder; wire actual links if you later host per-locale docs
+    const friendlyName = findLocaleName(locale);
     const cols: string[] = [
-      `[${locale}]()` // you can switch this to a friendly label
+      `${friendlyName}` // you can switch this to a friendly label
     ];
     if (showTextColumn) cols.push(textStatus(r) || "");
     if (showMediaColumn) cols.push(mediaStatus(r) || "");
-    cols.push(`**${ok}**`, mm ? `**${mm}**` : "0", miss ? `**${miss}**` : "0", creditsFor(locale));
+    cols.push(ok ? `**${ok}**` : "0", mm ? `**${mm}**` : "0", miss ? `**${miss}**` : "0", creditsFor(locale));
     rows.push(`| ${cols.join(" | ")} |`);
   }
 
@@ -297,11 +320,10 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
   table.push(...rows);
 
   const legendLines = [
-    "",
     "**Legend**",
-    "- 🟢 Complete (Locale has the correct structure and can be imported in the game)",
-    `- 🟡 Partial (≥1 missing files compared to \`${LOCALES_DIR}\\${REF_LOCALE}\`)`,
-    "- 🔘 Mismatch (One or more files incompatible with the game, check the workflow report for details)",
+    "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
+    `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}\\${REF_LOCALE}\`](${LOCALES_DIR}\\${REF_LOCALE}))`,
+    "- 🔘 Mismatch (≥1 files incompatible with the game, check the workflow report for details)",
     ""
   ];
 
@@ -310,7 +332,8 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
 ## Locales
 
 ${table.join("\n")}
-Last updated on ${today} (${timeUTC})
+
+Last updated on ${todayTimeUtc}
 
 ${legendLines.join("\n")}
 ${readmeFooter}`.trim() + "\n";
