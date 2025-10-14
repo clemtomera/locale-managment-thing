@@ -3093,8 +3093,7 @@
                 "Danke für diesen Beitrag.",
                 "Ich nehme das.",
                 "Nützlich.",
-                "Mit Vergnügen.",
-                "Ich werde das gut gebrauchen können."
+                "Mit Vergnügen."
             ],
             "traderhagglesuccess": [
                 "Na gut..",
@@ -3104,7 +3103,8 @@
                 "Ich akzeptiere deine Nachfrage.",
                 "Ich verstehe dich, Kumpel. Geht klar.",
                 "Dem muss ich zustimmen.",
-                "Einverstanden..."
+                "Einverstanden...",
+                "Ich werde das gut gebrauchen können."
             ],
             "traderhagglefail": [
                 "Wie wäre es mit nein?",

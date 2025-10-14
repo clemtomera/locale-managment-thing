@@ -9,7 +9,7 @@ Localization of the game **Causalties: Unknown** by [Orsoniks](https://github.co
 | [Deutsch](Locales/de-DE) | 🔘 Mismatch | 🟢 Complete | **3** | **1** | 0 | [Zorobis](https://github.com/Zorobis) |
 | [Français](Locales/fr-FR) | 🔘 Mismatch | - | 0 | **1** | **3** | [Azurian](https://github.com/clemtomera), [Dovahkick](https://github.com/Dovahkick) |
 
-Last updated on 14/10/2025, 13:23 UTC
+Last updated on 14/10/2025, 16:42 UTC
 
 **Legend**
 - 🟢 Complete (Elements have the correct structure and can be imported in the game)
