@@ -322,7 +322,7 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
   const legendLines = [
     "**Legend**",
     "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
-    `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}\\${REF_LOCALE}\`](${LOCALES_DIR}\\${REF_LOCALE}))`,
+    `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}/${REF_LOCALE}\`](${LOCALES_DIR}/${REF_LOCALE}))`,
     "- 🔘 Mismatch (≥1 files incompatible with the game, check the workflow report for details)",
     ""
   ];

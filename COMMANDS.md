@@ -12,3 +12,5 @@ if execution policy prevents running the script, you can run it with:
 ```
 Set-ExecutionPolicy RemoteSigned -Scope CurrentUser
 ```
+
+🔸🔻▫️
