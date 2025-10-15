@@ -1,13 +1,28 @@
 import fs from "node:fs";
 import path from "node:path";
-import { LOCALES_DIR, REF_LOCALE, listLocaleDirs, globAll, isJson, isImage, loadExclusions, filterExcluded, relJoin, readJson, writeJson } from "./utils";
+import {
+  LOCALES_DIR,
+  REF_LOCALE,
+  listLocaleDirs,
+  globAll,
+  isJson,
+  isImage,
+  loadExclusions,
+  filterExcluded,
+  relJoin,
+  readJson,
+  writeJson,
+} from "./utils";
 import { checkJsonPair } from "./json_compare";
 import { checkImagePair } from "./media_compare";
 
 type FileResult = {
-  validText: number; invalidText: number;
-  validMedia: number; invalidMedia: number;
-  missing: string[]; extra: string[];
+  validText: number;
+  invalidText: number;
+  validMedia: number;
+  invalidMedia: number;
+  missing: string[];
+  extra: string[];
   jsonErrors: Record<string, string[]>;
   mediaErrors: Record<string, string[]>;
   totals: { textInRef: number; mediaInRef: number };
@@ -19,8 +34,6 @@ type IndexShape = {
   alllocales: string[];
 };
 
-
-
 const REPORT_DIR = "reports";
 const REPORT_MD = path.join(REPORT_DIR, "workflow-report.md");
 const INDEX_JSON = path.join("Locales", "index.json");
@@ -29,12 +42,13 @@ const README_HEADER_PATH = ".github/templates/README.header.md";
 const README_FOOTER_PATH = ".github/templates/README.footer.md";
 const INDEX_TEMPLATE_PATH = ".github/templates/index.template.json";
 
-const IS_CI = process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
+const IS_CI =
+  process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
 const GH_SERVER = process.env.GITHUB_SERVER_URL;
 const GH_REPO = process.env.GITHUB_REPOSITORY;
 const GH_RUN_ID = process.env.GITHUB_RUN_ID;
 const RUN_ARTIFACTS_URL =
-  (GH_SERVER && GH_REPO && GH_RUN_ID)
+  GH_SERVER && GH_REPO && GH_RUN_ID
     ? `${GH_SERVER}/${GH_REPO}/actions/runs/${GH_RUN_ID}#artifacts`
     : null;
 
@@ -43,9 +57,13 @@ const RUN_ARTIFACTS_URL =
 
   const exclusions = loadExclusions();
 
-  const allLocales = listLocaleDirs().filter(d => d !== ".git").sort();
+  const allLocales = listLocaleDirs()
+    .filter((d) => d !== ".git")
+    .sort();
   if (!allLocales.includes(REF_LOCALE)) {
-    console.error(`Reference locale '${REF_LOCALE}' not found at ${LOCALES_DIR}/${REF_LOCALE}`);
+    console.error(
+      `Reference locale '${REF_LOCALE}' not found at ${LOCALES_DIR}/${REF_LOCALE}`
+    );
     process.exit(1);
   }
 
@@ -59,7 +77,7 @@ const RUN_ARTIFACTS_URL =
   const hasRefMedia = refMedia.length > 0;
 
   const results: Record<string, FileResult> = {};
-  const locales = allLocales.filter(l => l !== REF_LOCALE); // others
+  const locales = allLocales.filter((l) => l !== REF_LOCALE); // others
 
   for (const locale of [REF_LOCALE, ...locales]) {
     const locRoot = path.resolve(LOCALES_DIR, locale);
@@ -67,26 +85,29 @@ const RUN_ARTIFACTS_URL =
     locFiles = filterExcluded(locFiles, exclusions);
 
     const res: FileResult = {
-      validText: 0, invalidText: 0,
-      validMedia: 0, invalidMedia: 0,
-      missing: [], extra: [],
-      jsonErrors: {}, mediaErrors: {},
-      totals: { textInRef: refJson.length, mediaInRef: refMedia.length }
+      validText: 0,
+      invalidText: 0,
+      validMedia: 0,
+      invalidMedia: 0,
+      missing: [],
+      extra: [],
+      jsonErrors: {},
+      mediaErrors: {},
+      totals: { textInRef: refJson.length, mediaInRef: refMedia.length },
     };
 
     // Compare against ref only for non-en; for en we only “validate” en files internally
     const compareAgainst = (p: string) => relJoin(LOCALES_DIR, REF_LOCALE, p);
-    const inRefSet = new Set(refFiles.map(p => p));
+    const inRefSet = new Set(refFiles.map((p) => p));
 
     // Walk union of (ref files) and (locale files) so we catch missing/extra
-    const relSet = new Set<string>([
-      ...refFiles,
-      ...locFiles
-    ].map(absOrRel => {
-      // store RELATIVE to locale folder (normalized)
-      // refFiles are relative to REF root; locFiles to locale root
-      return absOrRel;
-    }));
+    const relSet = new Set<string>(
+      [...refFiles, ...locFiles].map((absOrRel) => {
+        // store RELATIVE to locale folder (normalized)
+        // refFiles are relative to REF root; locFiles to locale root
+        return absOrRel;
+      })
+    );
 
     // Missing/extra by path relative to ref
     // We’ll iterate reference files to check pairs
@@ -106,7 +127,9 @@ const RUN_ARTIFACTS_URL =
           if (valid) res.validText++;
           else {
             res.invalidText++;
-            res.jsonErrors[refRel] = mismatches.map(m => `\`${m.path}\` → ${m.reason}`);
+            res.jsonErrors[refRel] = mismatches.map(
+              (m) => `\`${m.path}\` → ${m.reason}`
+            );
           }
         } catch (e: any) {
           res.invalidText++;
@@ -114,11 +137,16 @@ const RUN_ARTIFACTS_URL =
         }
       } else if (isImage(refRel)) {
         try {
-          const { valid, mismatches } = await checkImagePair(refAbs, locCandidate);
+          const { valid, mismatches } = await checkImagePair(
+            refAbs,
+            locCandidate
+          );
           if (valid) res.validMedia++;
           else {
             res.invalidMedia++;
-            res.mediaErrors[refRel] = mismatches.map(m => `${m.reason}${m.detail ? ` (${m.detail})` : ""}`);
+            res.mediaErrors[refRel] = mismatches.map(
+              (m) => `${m.reason}${m.detail ? ` (${m.detail})` : ""}`
+            );
           }
         } catch (e: any) {
           res.invalidMedia++;
@@ -142,10 +170,16 @@ const RUN_ARTIFACTS_URL =
 
   // ---- Build condensed report (per-locale sections)
   const lines: string[] = [];
-  const todayTimeUtc = (new Date()).toLocaleString("en-GB", { timeZone: "UTC", dateStyle: "short", timeStyle: "short", hour12: false }) + " UTC";
+  const todayTimeUtc =
+    new Date().toLocaleString("en-GB", {
+      timeZone: "UTC",
+      dateStyle: "short",
+      timeStyle: "short",
+      hour12: false,
+    }) + " UTC";
 
   lines.push(`# Locale Audit Report`);
-  lines.push(`Last updated on ${todayTimeUtc}`);
+  lines.push(`Generated on ${todayTimeUtc}`);
   lines.push("");
 
   for (const locale of locales) {
@@ -156,13 +190,39 @@ const RUN_ARTIFACTS_URL =
     const mismatchCount = r.invalidText + r.invalidMedia;
 
     lines.push(`## ${locale}`);
-    lines.push(`- Text: ${hasRefText ? (textOK ? "🟢 Complete" : (r.invalidText > 0 ? "🔘 Mismatch" : `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`)) : "_(no text in reference)_"} `);
-    lines.push(`- Media: ${hasRefMedia ? (mediaOK ? "🟢 Complete" : (r.invalidMedia > 0 ? "🔘 Mismatch" : `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`)) : "_(no media in reference)_"} `);
-    lines.push(`- Ok: **${r.validText + r.validMedia}**  |  Mismatch: **${mismatchCount}**  |  Missing: **${missingCount}**`);
+    lines.push(
+      `- Text: ${
+        hasRefText
+          ? textOK
+            ? "🟢 Complete"
+            : r.invalidText > 0
+            ? "🔘 Mismatch"
+            : `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`
+          : "_(no text in reference)_"
+      } `
+    );
+    lines.push(
+      `- Media: ${
+        hasRefMedia
+          ? mediaOK
+            ? "🟢 Complete"
+            : r.invalidMedia > 0
+            ? "🔘 Mismatch"
+            : `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`
+          : "_(no media in reference)_"
+      } `
+    );
+    lines.push(
+      `- Ok: **${
+        r.validText + r.validMedia
+      }**  |  Mismatch: **${mismatchCount}**  |  Missing: **${missingCount}**`
+    );
     lines.push("");
 
     if (Object.keys(r.jsonErrors).length) {
-      lines.push(`<details><summary><strong>JSON mismatches</strong></summary>`);
+      lines.push(
+        `<details><summary><strong>JSON mismatches</strong></summary>`
+      );
       lines.push("");
       for (const f of Object.keys(r.jsonErrors).sort()) {
         lines.push(`- \`${f}\``);
@@ -173,7 +233,9 @@ const RUN_ARTIFACTS_URL =
       lines.push("");
     }
     if (Object.keys(r.mediaErrors).length) {
-      lines.push(`<details><summary><strong>Media mismatches</strong></summary>`);
+      lines.push(
+        `<details><summary><strong>Media mismatches</strong></summary>`
+      );
       lines.push("");
       for (const f of Object.keys(r.mediaErrors).sort()) {
         lines.push(`- \`${f}\``);
@@ -185,7 +247,9 @@ const RUN_ARTIFACTS_URL =
     }
 
     if (r.missing.length) {
-      lines.push(`<details><summary><strong>Missing files</strong> (${r.missing.length})</summary>`);
+      lines.push(
+        `<details><summary><strong>Missing files</strong> (${r.missing.length})</summary>`
+      );
       lines.push("");
       for (const f of r.missing.sort()) lines.push(`- \`${f}\``);
       lines.push(`</details>`);
@@ -193,7 +257,9 @@ const RUN_ARTIFACTS_URL =
     }
     if (r.extra.length) {
       lines.push("");
-      lines.push(`<details><summary><strong>Extra files</strong> (${r.extra.length})</summary>`);
+      lines.push(
+        `<details><summary><strong>Extra files</strong> (${r.extra.length})</summary>`
+      );
       for (const f of r.extra.sort()) lines.push(`- \`${f}\``);
       lines.push(`</details>`);
       lines.push("");
@@ -203,11 +269,11 @@ const RUN_ARTIFACTS_URL =
   fs.writeFileSync(REPORT_MD, lines.join("\n") + "\n");
 
   // ---- Compute index.json
-    const index: IndexShape = fs.existsSync(INDEX_JSON)
+  const index: IndexShape = fs.existsSync(INDEX_JSON)
     ? readJson<IndexShape>(INDEX_JSON)
-    : (fs.existsSync(INDEX_TEMPLATE_PATH)
-        ? readJson<IndexShape>(INDEX_TEMPLATE_PATH)
-        : { completelocales: [], validtextlocales: [], alllocales: [] });
+    : fs.existsSync(INDEX_TEMPLATE_PATH)
+    ? readJson<IndexShape>(INDEX_TEMPLATE_PATH)
+    : { completelocales: [], validtextlocales: [], alllocales: [] };
 
   const alllocales = [REF_LOCALE, ...locales];
   const completelocales: string[] = [];
@@ -217,12 +283,22 @@ const RUN_ARTIFACTS_URL =
     const r = results[locale];
 
     const textComplete =
-      (r.totals.textInRef === 0) || (r.invalidText === 0 && r.missing.filter(f => f.endsWith(".json")).length === 0);
+      r.totals.textInRef === 0 ||
+      (r.invalidText === 0 &&
+        r.missing.filter((f) => f.endsWith(".json")).length === 0);
     const mediaComplete =
-      (r.totals.mediaInRef === 0) || (r.invalidMedia === 0 && r.missing.filter(f => /\.(png|jpe?g)$/i.test(f)).length === 0);
+      r.totals.mediaInRef === 0 ||
+      (r.invalidMedia === 0 &&
+        r.missing.filter((f) => /\.(png|jpe?g)$/i.test(f)).length === 0);
 
     if (textComplete) validtextlocales.push(locale);
-    if (textComplete && mediaComplete && r.missing.length === 0 && r.invalidText === 0 && r.invalidMedia === 0) {
+    if (
+      textComplete &&
+      mediaComplete &&
+      r.missing.length === 0 &&
+      r.invalidText === 0 &&
+      r.invalidMedia === 0
+    ) {
       completelocales.push(locale);
     }
   }
@@ -234,8 +310,12 @@ const RUN_ARTIFACTS_URL =
   writeJson(INDEX_JSON, index);
 
   // ---- Update README.md (table between markers)
-const readmeHeader = fs.existsSync(README_HEADER_PATH) ? fs.readFileSync(README_HEADER_PATH, "utf8") : "";
-const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_FOOTER_PATH, "utf8") : "";
+  const readmeHeader = fs.existsSync(README_HEADER_PATH)
+    ? fs.readFileSync(README_HEADER_PATH, "utf8")
+    : "";
+  const readmeFooter = fs.existsSync(README_FOOTER_PATH)
+    ? fs.readFileSync(README_FOOTER_PATH, "utf8")
+    : "";
 
   const showTextColumn = refJson.length > 0;
   const showMediaColumn = refMedia.length > 0;
@@ -249,11 +329,18 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
     const p = path.join(LOCALES_DIR, locale, "strings.json");
     if (!fs.existsSync(p)) return `[${locale}](Locales/${locale})`;
     try {
-      const data = JSON.parse(fs.readFileSync(p,"utf8"));
-      if (data && typeof data === "object" && typeof data.name === "string" && data.name.trim().length > 0) {
+      const data = JSON.parse(fs.readFileSync(p, "utf8"));
+      if (
+        data &&
+        typeof data === "object" &&
+        typeof data.name === "string" &&
+        data.name.trim().length > 0
+      ) {
         return `[${data.name.trim()}](Locales/${locale})`;
       }
-    } catch { /* ignore */ }
+    } catch {
+      /* ignore */
+    }
     return locale;
   }
 
@@ -282,13 +369,18 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
     const p = path.join(LOCALES_DIR, locale, "credits.json");
     if (!fs.existsSync(p)) return "*no `credits.json` found*";
     try {
-      const data = JSON.parse(fs.readFileSync(p,"utf8"));
-      const arr = Array.isArray(data) ? data : (Array.isArray(data.contributors) ? data.contributors : []);
-      const render = (x:any) => {
+      const data = JSON.parse(fs.readFileSync(p, "utf8"));
+      const arr = Array.isArray(data)
+        ? data
+        : Array.isArray(data.contributors)
+        ? data.contributors
+        : [];
+      const render = (x: any) => {
         if (typeof x === "string") return `[${x}](https://github.com/${x})`;
         if (x && typeof x === "object") {
           const name = x.name ?? x.username ?? x.url ?? "Contributor";
-          const url = x.url ?? (x.username ? `https://github.com/${x.username}` : "");
+          const url =
+            x.url ?? (x.username ? `https://github.com/${x.username}` : "");
           return url ? `[${name}](${url})` : name;
         }
         return "Contributor";
@@ -302,12 +394,12 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
   const headerCols = ["Locale"];
   if (showTextColumn) headerCols.push("Text");
   if (showMediaColumn) headerCols.push("Media");
-  headerCols.push("Ok","Mismatch","Missing","Contributors");
+  headerCols.push("Ok", "Mismatch", "Missing", "Contributors");
 
   const align = [":---"];
   if (showTextColumn) align.push(":----------:");
   if (showMediaColumn) align.push(":----------:");
-  align.push(":---:"," :------: "," :-----: "," :-- ");
+  align.push(":---:", " :------: ", " :-----: ", " :-- ");
 
   const rows: string[] = [];
   for (const locale of locales) {
@@ -317,11 +409,16 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
     const miss = r.missing.length;
     const friendlyName = findLocaleName(locale);
     const cols: string[] = [
-      `${friendlyName}` // you can switch this to a friendly label
+      `${friendlyName}`, // you can switch this to a friendly label
     ];
     if (showTextColumn) cols.push(textStatus(r) || "");
     if (showMediaColumn) cols.push(mediaStatus(r) || "");
-    cols.push(ok ? `**${ok}**` : "0", mm ? `**${mm}**` : "0", miss ? `**${miss}**` : "0", creditsFor(locale));
+    cols.push(
+      ok ? `**${ok}**` : "0",
+      mm ? `**${mm}**` : "0",
+      miss ? `**${miss}**` : "0",
+      creditsFor(locale)
+    );
     rows.push(`| ${cols.join(" | ")} |`);
   }
 
@@ -332,19 +429,21 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
 
   const legendLines = [
     "**Legend**",
-    "- 🔘 Mismatch (≥1 files incompatible with the game, check the workflow report for details)",
+    "- 🔘 Mismatch (≥1 files incompatible with the game, check the [workflow report]" +
+      (IS_CI
+        ? RUN_ARTIFACTS_URL
+          ? `(${RUN_ARTIFACTS_URL})`
+          : " (available as an artifact on the run page)"
+        : ` (\`${REPORT_MD}\`)`
+      ) +
+      " for details)",
     `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}/${REF_LOCALE}\`](${LOCALES_DIR}/${REF_LOCALE}))`,
     "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
-      IS_CI
-    ? (RUN_ARTIFACTS_URL
-        ? `- 📄 Workflow report: [download from this run's artifacts](${RUN_ARTIFACTS_URL})`
-        : "- 📄 Workflow report: available as an artifact on the run page")
-    : `- 📄 Workflow report: \`${REPORT_MD}\``,
-    ""
+    "",
   ];
 
   const finalReadme =
-`${readmeHeader}
+    `${readmeHeader}
 ## Locales
 
 ${table.join("\n")}

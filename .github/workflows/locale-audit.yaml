@@ -34,11 +34,7 @@ jobs:
 
       - name: Publish job summary
         run: |
-          {
-            echo "# Locale Audit Report"
-            echo
-            cat reports/workflow-report.md
-          } >> "$GITHUB_STEP_SUMMARY"
+          { cat reports/workflow-report.md } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Commit changes (README.md, Locales/index.json)
         run: |
