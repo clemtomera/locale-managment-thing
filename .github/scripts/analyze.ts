@@ -95,7 +95,7 @@ const INDEX_TEMPLATE_PATH = ".github/templates/index.template.json";
           if (valid) res.validText++;
           else {
             res.invalidText++;
-            res.jsonErrors[refRel] = mismatches.map(m => `${m.path} → ${m.reason}`);
+            res.jsonErrors[refRel] = mismatches.map(m => `\`${m.path}\` → ${m.reason}`);
           }
         } catch (e: any) {
           res.invalidText++;
@@ -321,9 +321,9 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
 
   const legendLines = [
     "**Legend**",
-    "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
-    `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}/${REF_LOCALE}\`](${LOCALES_DIR}/${REF_LOCALE}))`,
     "- 🔘 Mismatch (≥1 files incompatible with the game, check the workflow report for details)",
+    `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}/${REF_LOCALE}\`](${LOCALES_DIR}/${REF_LOCALE}))`,
+    "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
     ""
   ];
 

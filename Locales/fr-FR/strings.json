@@ -2970,8 +2970,7 @@
                 "Argh !",
                 "Nffgh...",
                 "Aaawh !",
-                "Rhhgg...",
-                "Ouaaah !"
+                "Rhhgg..."
             ],
             "bigpain": [
                 "AÏE !!!",
@@ -2998,7 +2997,8 @@
                 "AAH...",
                 "PITIÉ !!",
                 "STOP !!!",
-                "BORDEL !!!"
+                "BORDEL !!!",
+                "Ouaaah !"
             ],
             "fallscream": [
                 "AAAAH !!",
@@ -3513,13 +3513,6 @@
                 "On dirait que vous êtes blessé et que vous saignez... Vous pouvez prendre un bandage si vous voulez.",
                 "Beurk ! Essayez de ne pas mettre du sang partout sur mon sol. Prenez un bandage et servez-vous en si vous en trouvez un, les miens sont gratuits.",
                 "Ça n’a pas l’air d’aller... Vous pouvez prendre un bandage gratuitement si vous en trouvez un sur moi."
-            ],
-            "traderlightbreak": [
-                "...Frérot. Je te vois. Voleur... Dégage !",
-                "Oh, imbécile ! Sortez tout de suite ! DEHORS !",
-                "EH ! Allez vous faire voir ! Tirez-vous d’ici !",
-                "Mais qu’est-ce qui vous prend de faire ça !? Dégagez ! J’ai besoin de lumière moi !",
-                "Pourquoi vous détruisez ma capsule !? Dégagez ! OUSTE !"
             ]
         }
     ],
