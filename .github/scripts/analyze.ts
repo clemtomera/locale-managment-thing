@@ -184,39 +184,25 @@ const RUN_ARTIFACTS_URL =
 
   for (const locale of locales) {
     const r = results[locale];
-    const textOK = r.invalidText === 0 && r.totals.textInRef > 0;
-    const mediaOK = r.invalidMedia === 0 && r.totals.mediaInRef > 0;
+    const textStatusLine =
+      hasRefText
+        ? statusFor(r, "text", hasRefText)
+        : "_(no text in reference)_";
+
+    const mediaStatusLine =
+      hasRefMedia
+        ? statusFor(r, "media", hasRefMedia)
+        : "_(no media in reference)_";
     const missingCount = r.missing.length;
     const mismatchCount = r.invalidText + r.invalidMedia;
 
     lines.push(`## ${locale}`);
+    lines.push(`- Text: ${textStatusLine}`);
+    lines.push(`- Media: ${mediaStatusLine}`);
+    lines.push("");
     lines.push(
-      `- Text: ${
-        hasRefText
-          ? textOK
-            ? "🟢 Complete"
-            : r.invalidText > 0
-            ? "🔘 Mismatch"
-            : `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`
-          : "_(no text in reference)_"
-      } `
-    );
-    lines.push(
-      `- Media: ${
-        hasRefMedia
-          ? mediaOK
-            ? "🟢 Complete"
-            : r.invalidMedia > 0
-            ? "🔘 Mismatch"
-            : `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`
-          : "_(no media in reference)_"
-      } `
-    );
-    lines.push(
-      `- Ok: **${
-        r.validText + r.validMedia
-      }**  |  Mismatch: **${mismatchCount}**  |  Missing: **${missingCount}**`
-    );
+      `Ok: **${r.validText + r.validMedia}**  |  Mismatch: **${mismatchCount}**  |  Missing: **${missingCount}**`
+    ); // small table summing up
     lines.push("");
 
     if (Object.keys(r.jsonErrors).length) {
@@ -317,9 +303,6 @@ const RUN_ARTIFACTS_URL =
     ? fs.readFileSync(README_FOOTER_PATH, "utf8")
     : "";
 
-  const showTextColumn = refJson.length > 0;
-  const showMediaColumn = refMedia.length > 0;
-
   /**
    * Tries to find the friendly locale name from strings.json's "name" field and formats it for markdown
    * @param locale locale code like `en` or `fr-FR`
@@ -344,24 +327,28 @@ const RUN_ARTIFACTS_URL =
     return locale;
   }
 
-  function textStatus(r: FileResult): string {
-    if (!showTextColumn) return "";
-    if (r.totals.textInRef === 0) return "";
-    if (r.invalidText > 0) return "🔘 Mismatch";
-    const ok = r.validText === r.totals.textInRef;
-    if (ok) return "🟢 Complete";
-    if (r.validText === 0) return "-";
-    return `🟡 Partial *(${r.validText}/${r.totals.textInRef})*`;
+  type StatusInput = {
+    show: boolean;           // whether we display this column/section at all
+    totalsInRef: number;     // how many files in the reference for this type
+    invalidCount: number;    // mismatches for this type
+    validCount: number;      // valids for this type
+  };
+
+  function renderStatus({ show, totalsInRef, invalidCount, validCount }: StatusInput): string {
+    if (!show) return "";
+    if (totalsInRef === 0) return ""; // no reference files should not happen if show=true
+    if (invalidCount > 0) return "🔘 Mismatch";
+    const ok = validCount === totalsInRef;
+    if (ok) return "🟢 Complete";
+    if (validCount === 0) return "   -   ";
+    return `🟡 Partial *(${validCount}/${totalsInRef})*`;
   }
 
-  function mediaStatus(r: FileResult): string {
-    if (!showMediaColumn) return "";
-    if (r.totals.mediaInRef === 0) return "";
-    if (r.invalidMedia > 0) return "🔘 Mismatch";
-    const ok = r.validMedia === r.totals.mediaInRef;
-    if (ok) return "🟢 Complete";
-    if (r.validMedia === 0) return "-";
-    return `🟡 Partial *(${r.validMedia}/${r.totals.mediaInRef})*`;
+  function statusFor(r: FileResult, kind: "text" | "media", show: boolean): string {
+    const totalsInRef = kind === "text" ? r.totals.textInRef : r.totals.mediaInRef;
+    const invalidCount = kind === "text" ? r.invalidText : r.invalidMedia;
+    const validCount = kind === "text" ? r.validText : r.validMedia;
+    return renderStatus({ show, totalsInRef, invalidCount, validCount });
   }
 
   // credits: Locales/<locale>/credits.json = ["githubUser","..."] or [{ "name":"", "url":"" }]
@@ -392,13 +379,13 @@ const RUN_ARTIFACTS_URL =
   }
 
   const headerCols = ["Locale"];
-  if (showTextColumn) headerCols.push("Text");
-  if (showMediaColumn) headerCols.push("Media");
+  if (hasRefText) headerCols.push("Text");
+  if (hasRefMedia) headerCols.push("Media");
   headerCols.push("Ok", "Mismatch", "Missing", "Contributors");
 
   const align = [":---"];
-  if (showTextColumn) align.push(":----------:");
-  if (showMediaColumn) align.push(":----------:");
+  if (hasRefText) align.push(":----------:");
+  if (hasRefMedia) align.push(":----------:");
   align.push(":---:", " :------: ", " :-----: ", " :-- ");
 
   const rows: string[] = [];
@@ -411,8 +398,8 @@ const RUN_ARTIFACTS_URL =
     const cols: string[] = [
       `${friendlyName}`, // you can switch this to a friendly label
     ];
-    if (showTextColumn) cols.push(textStatus(r) || "");
-    if (showMediaColumn) cols.push(mediaStatus(r) || "");
+    if (hasRefText) cols.push(statusFor(r, "text", hasRefText) || "");
+    if (hasRefMedia) cols.push(statusFor(r, "media", hasRefMedia) || "");
     cols.push(
       ok ? `**${ok}**` : "0",
       mm ? `**${mm}**` : "0",
@@ -429,7 +416,7 @@ const RUN_ARTIFACTS_URL =
 
   const legendLines = [
     "**Legend**",
-    "- 🔘 Mismatch (≥1 files incompatible with the game, check the [workflow report]" +
+    "- 🔘 Mismatch (≥1 files incompatible with the game, check the [📄workflow report]" +
       (IS_CI
         ? RUN_ARTIFACTS_URL
           ? `(${RUN_ARTIFACTS_URL})`
@@ -453,7 +440,6 @@ Last updated on ${todayTimeUtc}
 ${legendLines.join("\n")}
 ${readmeFooter}`.trim() + "\n";
 
-  // Write README.md between markers, or full overwrite if no markers/templates are desired
   fs.writeFileSync(README_MD, finalReadme, "utf8");
 
   console.log("Audit complete.");
