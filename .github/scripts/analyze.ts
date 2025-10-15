@@ -19,6 +19,8 @@ type IndexShape = {
   alllocales: string[];
 };
 
+
+
 const REPORT_DIR = "reports";
 const REPORT_MD = path.join(REPORT_DIR, "workflow-report.md");
 const INDEX_JSON = path.join("Locales", "index.json");
@@ -26,6 +28,15 @@ const README_MD = "README.md";
 const README_HEADER_PATH = ".github/templates/README.header.md";
 const README_FOOTER_PATH = ".github/templates/README.footer.md";
 const INDEX_TEMPLATE_PATH = ".github/templates/index.template.json";
+
+const IS_CI = process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
+const GH_SERVER = process.env.GITHUB_SERVER_URL;
+const GH_REPO = process.env.GITHUB_REPOSITORY;
+const GH_RUN_ID = process.env.GITHUB_RUN_ID;
+const RUN_ARTIFACTS_URL =
+  (GH_SERVER && GH_REPO && GH_RUN_ID)
+    ? `${GH_SERVER}/${GH_REPO}/actions/runs/${GH_RUN_ID}#artifacts`
+    : null;
 
 (async function main() {
   if (!fs.existsSync(REPORT_DIR)) fs.mkdirSync(REPORT_DIR, { recursive: true });
@@ -324,6 +335,11 @@ const readmeFooter = fs.existsSync(README_FOOTER_PATH) ? fs.readFileSync(README_
     "- 🔘 Mismatch (≥1 files incompatible with the game, check the workflow report for details)",
     `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}/${REF_LOCALE}\`](${LOCALES_DIR}/${REF_LOCALE}))`,
     "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
+      IS_CI
+    ? (RUN_ARTIFACTS_URL
+        ? `- 📄 Workflow report: [download from this run's artifacts](${RUN_ARTIFACTS_URL})`
+        : "- 📄 Workflow report: available as an artifact on the run page")
+    : `- 📄 Workflow report: \`${REPORT_MD}\``,
     ""
   ];
 
