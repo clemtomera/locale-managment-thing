@@ -200,55 +200,37 @@ const RUN_ARTIFACTS_URL =
     lines.push(`- Text: ${textStatusLine}`);
     lines.push(`- Media: ${mediaStatusLine}`);
     lines.push("");
-    lines.push(
-      `Ok: **${r.validText + r.validMedia}**  |  Mismatch: **${mismatchCount}**  |  Missing: **${missingCount}**`
-    ); // small table summing up
-    lines.push("");
 
     if (Object.keys(r.jsonErrors).length) {
       lines.push(
-        `<details><summary><strong>JSON mismatches</strong></summary>`
+        `<details><summary><strong>JSON mismatches</strong> (${Object.values(r.jsonErrors || {}).reduce((a, e) => a + e.length, 0)})</summary>`, ""
       );
-      lines.push("");
-      for (const f of Object.keys(r.jsonErrors).sort()) {
+      for (const f of Object.keys(r.jsonErrors || {}).sort()) {
         lines.push(`- \`${f}\``);
         for (const e of r.jsonErrors[f]) lines.push(`  - ${e}`);
       }
-      lines.push("");
-      lines.push(`</details>`);
-      lines.push("");
+      lines.push("</details>", "");
     }
     if (Object.keys(r.mediaErrors).length) {
       lines.push(
-        `<details><summary><strong>Media mismatches</strong></summary>`
+        `<details><summary><strong>Media mismatches</strong> (${Object.keys(r.mediaErrors).length})</summary>`, ""
       );
-      lines.push("");
       for (const f of Object.keys(r.mediaErrors).sort()) {
         lines.push(`- \`${f}\``);
         for (const e of r.mediaErrors[f]) lines.push(`  - ${e}`);
       }
-      lines.push("");
-      lines.push(`</details>`);
-      lines.push("");
+      lines.push("</details>", "");
     }
 
     if (r.missing.length) {
-      lines.push(
-        `<details><summary><strong>Missing files</strong> (${r.missing.length})</summary>`
-      );
-      lines.push("");
+      lines.push("", `<details><summary><strong>Missing files</strong> (${r.missing.length})</summary>`, "");
       for (const f of r.missing.sort()) lines.push(`- \`${f}\``);
-      lines.push(`</details>`);
-      lines.push("");
+      lines.push("</details>", "");
     }
     if (r.extra.length) {
-      lines.push("");
-      lines.push(
-        `<details><summary><strong>Extra files</strong> (${r.extra.length})</summary>`
-      );
+      lines.push("", `<details><summary><strong>Extra files</strong> (${r.extra.length})</summary>`, "");
       for (const f of r.extra.sort()) lines.push(`- \`${f}\``);
-      lines.push(`</details>`);
-      lines.push("");
+      lines.push("</details>", "");
     }
   }
 
@@ -258,8 +240,8 @@ const RUN_ARTIFACTS_URL =
   const index: IndexShape = fs.existsSync(INDEX_JSON)
     ? readJson<IndexShape>(INDEX_JSON)
     : fs.existsSync(INDEX_TEMPLATE_PATH)
-    ? readJson<IndexShape>(INDEX_TEMPLATE_PATH)
-    : { completelocales: [], validtextlocales: [], alllocales: [] };
+      ? readJson<IndexShape>(INDEX_TEMPLATE_PATH)
+      : { completelocales: [], validtextlocales: [], alllocales: [] };
 
   const alllocales = [REF_LOCALE, ...locales];
   const completelocales: string[] = [];
@@ -360,8 +342,8 @@ const RUN_ARTIFACTS_URL =
       const arr = Array.isArray(data)
         ? data
         : Array.isArray(data.contributors)
-        ? data.contributors
-        : [];
+          ? data.contributors
+          : [];
       const render = (x: any) => {
         if (typeof x === "string") return `[${x}](https://github.com/${x})`;
         if (x && typeof x === "object") {
@@ -417,13 +399,13 @@ const RUN_ARTIFACTS_URL =
   const legendLines = [
     "**Legend**",
     "- 🔘 Mismatch (≥1 files incompatible with the game, check the [📄workflow report]" +
-      (IS_CI
-        ? RUN_ARTIFACTS_URL
-          ? `(${RUN_ARTIFACTS_URL})`
-          : " (available as an artifact on the run page)"
-        : ` (\`${REPORT_MD}\`)`
-      ) +
-      " for details)",
+    (IS_CI
+      ? RUN_ARTIFACTS_URL
+        ? `(${RUN_ARTIFACTS_URL})`
+        : " (available as an artifact on the run page)"
+      : ` (\`${REPORT_MD}\`)`
+    ) +
+    " for details)",
     `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}/${REF_LOCALE}\`](${LOCALES_DIR}/${REF_LOCALE}))`,
     "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
     "",
