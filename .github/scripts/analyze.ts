@@ -49,7 +49,7 @@ const GH_REPO = process.env.GITHUB_REPOSITORY;
 const GH_RUN_ID = process.env.GITHUB_RUN_ID;
 const RUN_ARTIFACTS_URL =
   GH_SERVER && GH_REPO && GH_RUN_ID
-    ? `${GH_SERVER}/${GH_REPO}/actions/runs/${GH_RUN_ID}#artifacts`
+    ? `${GH_SERVER}/${GH_REPO}/actions/runs/${GH_RUN_ID}`
     : null;
 
 (async function main() {

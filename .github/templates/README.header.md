@@ -1,3 +1,3 @@
-# Causalties: Unknown Localization
+# Casualties: Unknown Localization
 
-Localization of the game **Causalties: Unknown** by [Orsoniks](https://github.com/Orsoniks)
+Community localization of the game **Casualties: Unknown** by [Orsoniks](https://github.com/Orsoniks)
