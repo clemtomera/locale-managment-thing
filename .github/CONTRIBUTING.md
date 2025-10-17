@@ -50,7 +50,7 @@ Great! Your insights and contributions are still very welcome. You can help by:
 
 3. Use a text editor or IDE that supports JSON formatting and validation to avoid syntax errors.
 
-4. You can run
+4. You can run the audit script locally to check your changes before pushing them. Instructions are in the [Commands And Procedures](./COMMANDS.md) document.
 
 5. Avoid using automatic translation tools for entire files, as they tend to fail to capture the context accurately. We recommend soliciting help from the community for specific terms or phrases. The [discord channel](https://discord.com/channels/955738554129063947/1298240970764324914) is for all general locale discussions, but use the specific threads for your language if available.
 
