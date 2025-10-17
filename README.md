@@ -9,10 +9,10 @@ Community localization of the game **Casualties: Unknown** by [Orsoniks](https:/
 | [Deutsch](Locales/de-DE) | 🔘 Mismatch | 🟢 Complete | **3** | **1** | 0 | [Zorobis](https://github.com/Zorobis) |
 | [Français](Locales/fr-FR) | 🔘 Mismatch |    -    | 0 | **1** | **3** | [Azurian](https://github.com/clemtomera), [Dovahkick](https://github.com/Dovahkick) |
 
-Last updated on 17/10/2025, 20:14 UTC
+Last updated on 17/10/2025, 21:23 UTC
 
 **Legend**
-- 🔘 Mismatch (≥1 files incompatible with the game, check the [📄workflow report](https://github.com/clemtomera/locale-managment-thing/actions/runs/18603764055) for details)
+- 🔘 Mismatch (≥1 files incompatible with the game, check the [📄workflow report](https://github.com/clemtomera/locale-managment-thing/actions/runs/18605208066) for details)
 - 🟡 Partial (≥1 missing files compared to [`Locales/en`](Locales/en))
 - 🟢 Complete (Elements have the correct structure and can be imported in the game)
 
