@@ -17,19 +17,29 @@ The structure of each locale directory mirrors that of the reference locale. The
 
 ## Getting Started
 
-1. **Fork the Repository and Clone it**: Start by forking this repository to your GitHub account and then clone it to your local machine.
-
-2. Keep Your Fork Updated: Regularly sync your fork with the upstream repository to stay updated with the latest changes.
+If you don't know where to start, you might want to consult the [Commands And Procedures](./COMMANDS.md) document, which explains how to clone the repository, make changes, and submit your contributions via pull requests.
 
 ### Existing Locales
 
 > But there is already a locale for my language!
 
 Great! Your insights and contributions are still very welcome. You can help by:
-- Reviewing and improving existing translations.
 
+- **Getting in touch with the locale's team on the [discord channel](https://discord.com/channels/955738554129063947/1298240970764324914)**, that way they can tell you where your help’s needed most.
+
+- **Reviewing and improving existing translations**: Even if the locale is marked as 'complete', that only means that the files are compatible, no that the translation is finalized. Translations only worked on by one person deserve to be proofread and revised.
 
 ### Creating a New Locale
+
+> There is no locale for my language yet!
+
+If you have read the guidelines and are ready to start translating, you can create a new locale by :
+
+- **Getting in touch with the community on the [discord channel](https://discord.com/channels/955738554129063947/1298240970764324914)**, to see if others are interested in helping you or are already working on it.
+
+- Creating a new directory in the `Locales` folder, named according to your locale code.
+
+- Starting to work on the `strings.json` file.
 
 ## Guidelines for Editing Localization Files
 
