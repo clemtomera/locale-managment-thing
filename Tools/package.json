@@ -2,7 +2,7 @@
   "name": "locale-audit",
   "private": true,
   "version": "1.0.0",
-  "description": "Localization assets for the Unity package.",
+  "description": "Audit and transform locale assets for the Unity package.",
   "scripts": {
     "analyze": "ts-node --transpile-only ./scripts/analyze.ts"
   },
@@ -12,7 +12,6 @@
     "sharp": "^0.33.5"
   },
   "devDependencies": {
-    "@types/micromatch": "^4.0.10",
     "@types/node": "^24.7.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.3"
