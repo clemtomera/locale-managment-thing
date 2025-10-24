@@ -1,23 +1,13 @@
 {
-  "name": "locale-audit",
-  "private": true,
-  "scripts": {
-    "analyze": "ts-node --transpile-only .github/scripts/analyze.ts"
-  },
-  "dependencies": {
-    "fast-glob": "^3.3.3",
-    "micromatch": "^4.0.8",
-    "sharp": "^0.33.5"
-  },
-  "devDependencies": {
-    "@types/node": "^24.7.2",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.9.3"
-  },
+  "name": "com.cucommunity.locales",
+  "displayName": "Locales (Shared)",
   "version": "1.0.0",
-  "main": "index.js",
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": ""
+  "unity": "2021.3",
+  "description": "Shared localization assets and utilities consumable as a Unity package.",
+  "dependencies": {
+    "com.unity.localization": "1.6.3"
+  },
+  "author": {
+    "name": "c-u-community"
+  }
 }

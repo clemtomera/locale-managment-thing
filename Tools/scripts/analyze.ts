@@ -1,7 +1,9 @@
 import fs from "node:fs";
 import path from "node:path";
 import {
-  LOCALES_DIR,
+  REPO_ROOT,
+  LOCALES_DIR_FS,
+  LOCALES_DIR_MD,
   REF_LOCALE,
   listLocaleDirs,
   globAll,
@@ -34,13 +36,15 @@ type IndexShape = {
   alllocales: string[];
 };
 
-const REPORT_DIR = "reports";
-const REPORT_MD = path.join(REPORT_DIR, "workflow-report.md");
-const INDEX_JSON = path.join("Locales", "index.json");
-const README_MD = "README.md";
-const README_HEADER_PATH = ".github/templates/README.header.md";
-const README_FOOTER_PATH = ".github/templates/README.footer.md";
-const INDEX_TEMPLATE_PATH = ".github/templates/index.template.json";
+const REPORT_DIR_FS = path.join(REPO_ROOT, "reports");
+const REPORT_DIR = "../reports";
+const REPORT_MD_FS  = path.join(REPORT_DIR_FS, "workflow-report.md");
+const REPORT_MD_HREF = "reports/workflow-report.md";
+const INDEX_JSON = path.join(`${LOCALES_DIR_FS}`, "index.json");
+const README_MD = "../README.md";
+const README_HEADER_PATH = "../Tools/templates/README.header.md";
+const README_FOOTER_PATH = "../Tools/templates/README.footer.md";
+const INDEX_TEMPLATE_PATH = "../Tools/templates/index.template.json";
 
 const IS_CI =
   process.env.CI === "true" || process.env.GITHUB_ACTIONS === "true";
@@ -62,12 +66,12 @@ const RUN_ARTIFACTS_URL =
     .sort();
   if (!allLocales.includes(REF_LOCALE)) {
     console.error(
-      `Reference locale '${REF_LOCALE}' not found at ${LOCALES_DIR}/${REF_LOCALE}`
+      `Reference locale '${REF_LOCALE}' not found at ${LOCALES_DIR_FS}/${REF_LOCALE}`
     );
     process.exit(1);
   }
 
-  const refRoot = path.resolve(LOCALES_DIR, REF_LOCALE);
+  const refRoot = path.resolve(LOCALES_DIR_FS, REF_LOCALE);
   let refFiles = globAll(refRoot);
   refFiles = filterExcluded(refFiles, exclusions);
 
@@ -80,7 +84,7 @@ const RUN_ARTIFACTS_URL =
   const locales = allLocales.filter((l) => l !== REF_LOCALE); // others
 
   for (const locale of [REF_LOCALE, ...locales]) {
-    const locRoot = path.resolve(LOCALES_DIR, locale);
+    const locRoot = path.resolve(LOCALES_DIR_FS, locale);
     let locFiles = globAll(locRoot);
     locFiles = filterExcluded(locFiles, exclusions);
 
@@ -97,7 +101,7 @@ const RUN_ARTIFACTS_URL =
     };
 
     // Compare against ref only for non-en; for en we only “validate” en files internally
-    const compareAgainst = (p: string) => relJoin(LOCALES_DIR, REF_LOCALE, p);
+    const compareAgainst = (p: string) => relJoin(LOCALES_DIR_FS, REF_LOCALE, p);
     const inRefSet = new Set(refFiles.map((p) => p));
 
     // Walk union of (ref files) and (locale files) so we catch missing/extra
@@ -234,7 +238,7 @@ const RUN_ARTIFACTS_URL =
     }
   }
 
-  fs.writeFileSync(REPORT_MD, lines.join("\n") + "\n");
+  fs.writeFileSync(REPORT_MD_FS, lines.join("\n") + "\n");
 
   // ---- Compute index.json
   const index: IndexShape = fs.existsSync(INDEX_JSON)
@@ -291,8 +295,8 @@ const RUN_ARTIFACTS_URL =
    * @returns a string like `[English](Locales/en)` or just `[en](Locales/en)` if not found
    */
   function findLocaleName(locale: string): string {
-    const p = path.join(LOCALES_DIR, locale, "strings.json");
-    if (!fs.existsSync(p)) return `[${locale}](Locales/${locale})`;
+    const p = path.join(LOCALES_DIR_FS, locale, "strings.json");
+    if (!fs.existsSync(p)) return `[${locale}](${LOCALES_DIR_MD}/${locale})`;
     try {
       const data = JSON.parse(fs.readFileSync(p, "utf8"));
       if (
@@ -301,7 +305,7 @@ const RUN_ARTIFACTS_URL =
         typeof data.name === "string" &&
         data.name.trim().length > 0
       ) {
-        return `[${data.name.trim()}](Locales/${locale})`;
+        return `[${data.name.trim()}](${LOCALES_DIR_MD}/${locale})`;
       }
     } catch {
       /* ignore */
@@ -335,7 +339,7 @@ const RUN_ARTIFACTS_URL =
 
   // credits: Locales/<locale>/credits.json = ["githubUser","..."] or [{ "name":"", "url":"" }]
   function creditsFor(locale: string): string {
-    const p = path.join(LOCALES_DIR, locale, "credits.json");
+    const p = path.join(LOCALES_DIR_FS, locale, "credits.json");
     if (!fs.existsSync(p)) return "*no `credits.json` found*";
     try {
       const data = JSON.parse(fs.readFileSync(p, "utf8"));
@@ -396,18 +400,20 @@ const RUN_ARTIFACTS_URL =
   table.push(`| ${align.join(" | ")} |`);
   table.push(...rows);
 
+  const WORKFLOW_REPORT_LINK = (() => {
+    if (IS_CI && RUN_ARTIFACTS_URL) {
+      return `[📄workflow report](${RUN_ARTIFACTS_URL})`;
+    }
+    if (IS_CI) {
+      return "📄workflow report (available as an artifact on the run page)";
+    }
+    return `[📄workflow report](${REPORT_MD_HREF})`;
+  })();
   const legendLines = [
     "**Legend**",
-    "- 🔘 Mismatch (≥1 files incompatible with the game, check the [📄workflow report]" +
-    (IS_CI
-      ? RUN_ARTIFACTS_URL
-        ? `(${RUN_ARTIFACTS_URL})`
-        : " (available as an artifact on the run page)"
-      : ` (\`${REPORT_MD}\`)`
-    ) +
-    " for details)",
-    `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR}/${REF_LOCALE}\`](${LOCALES_DIR}/${REF_LOCALE}))`,
-    "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
+    `- 🔘 Mismatch (≥1 files incompatible with the game, check the ${WORKFLOW_REPORT_LINK} for details)`,
+    `- 🟡 Partial (≥1 missing files compared to [\`${LOCALES_DIR_MD}/${REF_LOCALE}\`](${LOCALES_DIR_MD}/${REF_LOCALE}))`,
+    "- 🟢 Complete (Elements have the correct structure and can be imported in the game)",
     "",
   ];
 

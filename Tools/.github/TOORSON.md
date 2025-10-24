@@ -32,6 +32,10 @@ Hello Orson!
 
 ## How to integrate it within your game
 
+Assuming you are properly versioning your game project with Git:
+
+
+
 ## What is left to discuss
 
 - You may want to pick a license for this repository, separating in rights between code, official game assets, and community contributed assets.
