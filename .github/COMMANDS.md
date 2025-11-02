@@ -92,6 +92,7 @@ You can always update your PR by making additional commits to the same branch in
 
 In the root of the repository, run the following commands:
 ``` powershell
+cd Tools # Navigate to the Tools folder
 npm ci # Install dependencies
 npm run analyze # Run the localization audit
 ```
