@@ -30,10 +30,10 @@ type FileResult = {
   totals: { textInRef: number; mediaInRef: number };
 };
 
-type IndexShape = {
-  completelocales: string[];
-  validtextlocales: string[];
-  alllocales: string[];
+type IndexStructure = {
+  completeLocales: string[];
+  validTextLocales: string[];
+  allLocales: string[];
 };
 
 const REPORT_DIR_FS = path.join(REPO_ROOT, "reports");
@@ -61,10 +61,10 @@ const RUN_ARTIFACTS_URL =
 
   const exclusions = loadExclusions();
 
-  const allLocales = listLocaleDirs()
+  const allLocalesDirs = listLocaleDirs()
     .filter((d) => d !== ".git")
     .sort();
-  if (!allLocales.includes(REF_LOCALE)) {
+  if (!allLocalesDirs.includes(REF_LOCALE)) {
     console.error(
       `Reference locale '${REF_LOCALE}' not found at ${LOCALES_DIR_FS}/${REF_LOCALE}`
     );
@@ -81,7 +81,7 @@ const RUN_ARTIFACTS_URL =
   const hasRefMedia = refMedia.length > 0;
 
   const results: Record<string, FileResult> = {};
-  const locales = allLocales.filter((l) => l !== REF_LOCALE); // others
+  const locales = allLocalesDirs.filter((l) => l !== REF_LOCALE);
 
   for (const locale of [REF_LOCALE, ...locales]) {
     const locRoot = path.resolve(LOCALES_DIR_FS, locale);
@@ -241,17 +241,17 @@ const RUN_ARTIFACTS_URL =
   fs.writeFileSync(REPORT_MD_FS, lines.join("\n") + "\n");
 
   // ---- Compute index.json
-  const index: IndexShape = fs.existsSync(INDEX_JSON)
-    ? readJson<IndexShape>(INDEX_JSON)
+  const index: IndexStructure = fs.existsSync(INDEX_JSON)
+    ? readJson<IndexStructure>(INDEX_JSON)
     : fs.existsSync(INDEX_TEMPLATE_PATH)
-      ? readJson<IndexShape>(INDEX_TEMPLATE_PATH)
-      : { completelocales: [], validtextlocales: [], alllocales: [] };
+      ? readJson<IndexStructure>(INDEX_TEMPLATE_PATH)
+      : { completeLocales: [], validTextLocales: [], allLocales: [] };
 
-  const alllocales = [REF_LOCALE, ...locales];
-  const completelocales: string[] = [];
-  const validtextlocales: string[] = [];
+  const completeLocales: string[] = [];
+  const validTextLocales: string[] = [];
+  const allLocales = [REF_LOCALE, ...locales];
 
-  for (const locale of alllocales) {
+  for (const locale of allLocales) {
     const r = results[locale];
 
     const textComplete =
@@ -263,7 +263,7 @@ const RUN_ARTIFACTS_URL =
       (r.invalidMedia === 0 &&
         r.missing.filter((f) => /\.(png|jpe?g)$/i.test(f)).length === 0);
 
-    if (textComplete) validtextlocales.push(locale);
+    if (textComplete) validTextLocales.push(locale);
     if (
       textComplete &&
       mediaComplete &&
@@ -271,13 +271,13 @@ const RUN_ARTIFACTS_URL =
       r.invalidText === 0 &&
       r.invalidMedia === 0
     ) {
-      completelocales.push(locale);
+      completeLocales.push(locale);
     }
   }
 
-  index.completelocales = Array.from(new Set(completelocales)).sort();
-  index.validtextlocales = Array.from(new Set(validtextlocales)).sort();
-  index.alllocales = Array.from(new Set(alllocales)).sort();
+  index.completeLocales = Array.from(new Set(completeLocales)).sort();
+  index.validTextLocales = Array.from(new Set(validTextLocales)).sort();
+  index.allLocales = Array.from(new Set(allLocales)).sort();
 
   writeJson(INDEX_JSON, index);
 
@@ -317,10 +317,10 @@ const RUN_ARTIFACTS_URL =
     show: boolean;           // whether we display this column/section at all
     totalsInRef: number;     // how many files in the reference for this type
     invalidCount: number;    // mismatches for this type
-    validCount: number;      // valids for this type
+    validCount: number;      // valid for this type
   };
 
-  function renderStatus({ show, totalsInRef, invalidCount, validCount }: StatusInput): string {
+  function printStatusLabel({ show, totalsInRef, invalidCount, validCount }: StatusInput): string {
     if (!show) return "";
     if (totalsInRef === 0) return ""; // no reference files should not happen if show=true
     if (invalidCount > 0) return "🔘 Mismatch";
@@ -334,7 +334,7 @@ const RUN_ARTIFACTS_URL =
     const totalsInRef = kind === "text" ? r.totals.textInRef : r.totals.mediaInRef;
     const invalidCount = kind === "text" ? r.invalidText : r.invalidMedia;
     const validCount = kind === "text" ? r.validText : r.validMedia;
-    return renderStatus({ show, totalsInRef, invalidCount, validCount });
+    return printStatusLabel({ show, totalsInRef, invalidCount, validCount });
   }
 
   // credits: Locales/<locale>/credits.json = ["githubUser","..."] or [{ "name":"", "url":"" }]
@@ -382,7 +382,7 @@ const RUN_ARTIFACTS_URL =
     const miss = r.missing.length;
     const friendlyName = findLocaleName(locale);
     const cols: string[] = [
-      `${friendlyName}`, // you can switch this to a friendly label
+      `${friendlyName}`,
     ];
     if (hasRefText) cols.push(statusFor(r, "text", hasRefText) || "");
     if (hasRefMedia) cols.push(statusFor(r, "media", hasRefMedia) || "");
