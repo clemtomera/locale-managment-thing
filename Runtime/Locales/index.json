@@ -9,5 +9,16 @@
     "de-DE",
     "en",
     "fr-FR"
+  ],
+  "completeLocales": [
+    "en"
+  ],
+  "validTextLocales": [
+    "en"
+  ],
+  "allLocales": [
+    "de-DE",
+    "en",
+    "fr-FR"
   ]
 }
